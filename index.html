@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>device motion detect</title>
+</head>
+<body>
+    <div class="row">
+        <span class="row-label">帧数</span>
+        <span id="J_Frame"></span>
+    </div>
+    <div class="row">
+        <span class="row-label">x轴方向数据(单位：m/s2)</span>
+        <span id="J_X"></span>
+    </div>
+    <div class="row">
+        <span class="row-label">y轴方向数据</span>
+        <span id="J_Y"></span>
+    </div>
+    <div class="row">
+        <span class="row-label">z轴方向数据</span>
+        <span id="J_Z"></span>
+    </div>
+    <div class="row">
+        <span class="row-label">变化趋势</span>
+        <span id="J_Trend"></span>
+    </div>
+    <div class="row">
+        <span class="row-label">变化累积</span>
+        <span id="J_Accumulate"></span>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        var socket = io();
+        var user = '用户' + Math.random().toFixed(3) * 1000;
+        socket.emit('user', user);
+
+        // define static
+        var last = {
+            x: 0,
+            y: 0,
+            z: 9.8
+        }
+        var accumulate = 0;
+
+        // device motion event handling
+        function handleMotionEvent (event) {
+            console.log(event)
+            var frame = event.interval;
+            var x = 0;
+            var y = 0;
+            var z = 9.8;
+
+            if (event.accelerationIncludingGravity.x) {
+                x = event.accelerationIncludingGravity.x;
+            }
+            if (event.accelerationIncludingGravity.y) {
+                y = event.accelerationIncludingGravity.y;
+            }
+            if (event.accelerationIncludingGravity.z) {
+                z = event.accelerationIncludingGravity.z;
+            }
+
+            var trend = Math.pow((x - last.x), 2) + Math.pow((y - last.y), 2) + Math.pow((z - last.z), 2);
+
+            document.getElementById('J_Frame').innerHTML = frame;
+            document.getElementById('J_X').innerHTML = x;
+            document.getElementById('J_Y').innerHTML = y;
+            document.getElementById('J_Z').innerHTML = z;
+
+            document.getElementById('J_Trend').innerHTML = trend;
+            document.getElementById('J_Accumulate').innerHTML = accumulate;
+
+            accumulate += Number(trend.toFixed(0));
+            last.x = x;
+            last.y = y;
+            last.z = z;
+        }
+        // device motion event binding
+        if (window.DeviceMotionEvent) {
+            window.addEventListener("devicemotion", handleMotionEvent, true);
+        } else {
+            window.alert('很抱歉，您的手机浏览器不支持')
+        }
+    </script>
+</body>
+</html>
